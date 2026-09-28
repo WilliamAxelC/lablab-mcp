@@ -1,4 +1,5 @@
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { fileURLToPath } from "node:url";
 import { createLablabServer } from "./mcp/server.js";
 import { defaultLablabClient } from "./client.js";
 import { generateBrainstormIdeas } from "./generators/brainstorm.js";
@@ -10,8 +11,10 @@ export * from "./mcp/tools.js";
 export * from "./mcp/resources.js";
 export * from "./mcp/prompts.js";
 export * from "./mcp/server.js";
+export * from "./generators/brainstorm.js";
+export * from "./generators/scaffold.js";
 
-async function main(): Promise<void> {
+export async function main(): Promise<void> {
   const args = process.argv.slice(2);
 
   if (args.includes("--version") || args.includes("-v")) {
@@ -86,7 +89,18 @@ Environment Variables:
   console.error("[lablab-mcp] Server running on stdio.");
 }
 
-main().catch((error) => {
-  console.error("[lablab-mcp] Fatal error:", error);
-  process.exit(1);
-});
+const currentFile = fileURLToPath(import.meta.url);
+const invokedFile = process.argv[1];
+const isDirectRun =
+  invokedFile &&
+  (currentFile === invokedFile ||
+    invokedFile.endsWith("lablab-mcp") ||
+    invokedFile.endsWith("dist/index.js") ||
+    invokedFile.endsWith("src/index.ts"));
+
+if (isDirectRun) {
+  main().catch((error) => {
+    console.error("[lablab-mcp] Fatal error:", error);
+    process.exit(1);
+  });
+}
